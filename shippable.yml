@@ -1,13 +1,15 @@
 language: python
 
 python:
-  - 2.7 #.14
+ # - 2.7
+ # - pypy
+  - pypy3
 
 build:
   pre_ci:
     - echo "pre-ci section"
     - docker build -t=shippabledocker/sample_node_pvt:ecr .
-    
+  
   pre_ci_boot:
     image_name: drydock/u16pytall
     image_tag: master
@@ -22,11 +24,16 @@ build:
     - which python
     - coverage run `which nosetests` test.py --with-xunit --xunit-file=shippable/testresults/nosetests.xml
     - coverage xml -o shippable/codecoverage/coverage.xml
-    
+    - lsb_release -a
+    - docker --version
+    - docker info
+    - docker ps 
+    #- sleep 3m
+  
   post_ci:
     - echo "post-ci section"
     - docker push shippabledocker/sample_node_pvt:ecr 
-    
+  
   on_success:
     - echo "on-success section"
     
@@ -39,11 +46,24 @@ build:
    
   push:
     - echo "post-ci section"
-    - docker push shippabledocker/sample_node_pvt:ecr 
-        
+    - docker push shippabledocker/sample_node_pvt:ecr
+      
 integrations:
   hub:
-
  #Docker integration
     - integrationName: ship-docker
       type: dockerRegistryLogin
+    
+  notifications:
+    - integrationName: email         
+      type: email        
+      recipients:
+        - shiptest.rc.ow@gmail.com
+        - shiptest.rc.me@gmail.com
+        - varsha@shippable.com
+      sendConsoleLogs: true
+      sendCoverageReports: true
+      on_start: always
+      on_success: always 
+      on_failure: always 
+      on_cancel: always 
